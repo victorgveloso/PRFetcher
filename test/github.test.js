@@ -10,7 +10,7 @@ describe('Given a github connection', () => {
     const repo = "spring-boot"
     beforeEach(() => {
         github = new Github(new Octokit({
-            auth: "63ec59d1ae52d3f2b4710da01bc3b6b55e16d8d4"
+            auth: process.env.AUTHKEY
         }), owner, repo)
     })
     it('Should get a valid pull request', async () => {

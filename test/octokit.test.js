@@ -7,7 +7,7 @@ const owner = "elastic"
 const repo = "elasticsearch"
 beforeEach(() => {
     octokit = new Octokit({
-        auth: "63ec59d1ae52d3f2b4710da01bc3b6b55e16d8d4"
+        auth: process.env.AUTHKEY
     })
 })
 it('Should get all pull requests from spring-boot (without repetition)', async () => {

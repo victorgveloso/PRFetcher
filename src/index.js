@@ -11,7 +11,7 @@ const {
 
 Octokit.plugin(retry)
 Octokit.plugin(throttling)
-
+console.warn(process.env)
 const octokit = new Octokit({
     log: console,
     auth: process.env.AUTHKEY,

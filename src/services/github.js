@@ -1,6 +1,7 @@
 const PullRequest = require('../model/pullrequest')
 const Commit = require('../model/commit')
 const File = require('../model/file')
+var fs = require('fs').promises
 
 class Github {
     octokit
@@ -20,17 +21,33 @@ class Github {
         return new PullRequest({owner: this.owner, repo: this.repo, ...pull.data})
     }
 
-    async fetchPullsNumber(opts) {
-        let pulls = []
-        var fs = require('fs').promises
-        let found = true
+    async getCache() {
+        let pulls = null
         try {
             pulls = (await fs.readFile(`${this.owner}-${this.repo}.csv`,{encoding: "utf-8"})).split(',')
         } catch (error) {
-            found = false
             console.warn(`Could not read from file ${this.owner}-${this.repo}.csv: ${error}`)
         }
-        if (!found){
+        return pulls
+    }
+
+    async createCache(pulls) {
+        try {
+            await fs.writeFile(`${this.owner}-${this.repo}.csv`,pulls.join(','),function(err) {
+                if(err){
+                    console.warn(`Error occurred trying to write to file:${err}`)
+                }
+            })
+        } catch (error) {
+            console.warn(`Could not write to file ${this.owner}-${this.repo}.csv: ${error}`)
+        }
+    }
+
+    async fetchPullsNumber(opts) {
+        let pulls = await this.getCache()
+        
+        if (!pulls){
+            pulls = []
             for await (const pull_page of this.octokit.paginate.iterator(
                 this.octokit.pulls.list, {
                     owner: this.owner,
@@ -47,15 +64,7 @@ class Github {
                     console.warn(`Error status: ${err}`)
                 }
             }
-            try {
-                fs.writeFile(`${this.owner}-${this.repo}.csv`,pulls.join(','),function(err) {
-                    if(err){
-                        console.warn(`Error occurred trying to write to file:${err}`)
-                    }
-                })
-            } catch (error) {
-                console.warn(`Could not write to file ${this.owner}-${this.repo}.csv: ${error}`)
-            }
+            await this.createCache(pulls)
         }
         return pulls
     }
